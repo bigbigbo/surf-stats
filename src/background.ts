@@ -1,17 +1,9 @@
-import type { WebsiteVisits } from "./types"
 import {
   getHostname,
   shouldTrackUrl,
   shouldUpdateVisitCount
 } from "./utils/helpers"
-import {
-  clearWebsiteVisits,
-  getWebsiteVisits,
-  updateWebsiteVisit
-} from "./utils/storage"
-
-// 存储网站访问信息
-let websiteVisits: WebsiteVisits = {}
+import { websiteVisitsManager } from "./utils/storage"
 
 // 添加一个变量来存储最后一次更新的时间戳
 let lastUpdateTimestamp: { [tabId: number]: number } = {}
@@ -22,12 +14,12 @@ async function updateWebsiteVisitInfo(
   title: string,
   favicon: string
 ) {
-  await updateWebsiteVisit(hostname, {
+  const currentVisit = websiteVisitsManager.getWebsiteVisits()[hostname]
+  await websiteVisitsManager.updateWebsiteVisit(hostname, {
     title,
-    favicon: favicon || websiteVisits[hostname]?.favicon,
-    visitCount: (websiteVisits[hostname]?.visitCount || 0) + 1
+    favicon: favicon || currentVisit?.favicon,
+    visitCount: (currentVisit?.visitCount || 0) + 1
   })
-  websiteVisits = await getWebsiteVisits()
 }
 
 // 监听标签页更新事件
@@ -51,17 +43,19 @@ let currentTabId: number | null = null
 let currentTabStartTime: number | null = null
 let currentTabUrl: string | null = null
 
-function updateTimeSpent() {
+async function updateTimeSpent() {
   if (
     currentTabId !== null &&
     currentTabStartTime !== null &&
-    currentTabUrl !== null &&
-    websiteVisits[currentTabUrl]
+    currentTabUrl !== null
   ) {
-    const timeSpent = Date.now() - currentTabStartTime
-    updateWebsiteVisit(currentTabUrl, {
-      timeSpent: (websiteVisits[currentTabUrl].timeSpent || 0) + timeSpent
-    })
+    const websiteVisits = websiteVisitsManager.getWebsiteVisits()
+    if (websiteVisits[currentTabUrl]) {
+      const timeSpent = Date.now() - currentTabStartTime
+      await websiteVisitsManager.updateWebsiteVisit(currentTabUrl, {
+        timeSpent: (websiteVisits[currentTabUrl].timeSpent || 0) + timeSpent
+      })
+    }
   }
 }
 
@@ -74,8 +68,9 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
   chrome.tabs.get(currentTabId, (tab) => {
     if (tab.url && shouldTrackUrl(tab.url)) {
       currentTabUrl = getHostname(tab.url)
+      const websiteVisits = websiteVisitsManager.getWebsiteVisits()
       if (!websiteVisits[currentTabUrl]) {
-        updateWebsiteVisit(currentTabUrl, {
+        websiteVisitsManager.updateWebsiteVisit(currentTabUrl, {
           title: tab.title || "",
           favicon: tab.favIconUrl || ""
         })
@@ -98,12 +93,6 @@ chrome.windows.onRemoved.addListener(() => {
 chrome.alarms.create("resetStats", { periodInMinutes: 1440 })
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === "resetStats") {
-    clearWebsiteVisits()
-    websiteVisits = {}
+    websiteVisitsManager.clearWebsiteVisits()
   }
-})
-
-// 初始化：从存储中加载数据
-getWebsiteVisits().then((visits) => {
-  websiteVisits = visits
 })
