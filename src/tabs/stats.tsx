@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react"
 
 import type { WebsiteVisit } from "../types"
-import { formatTime } from "../utils/helpers"
-import { getWebsiteVisits } from "../utils/storage"
+import { formatTime, getHostname } from "../utils/helpers"
+import { getHiddenSites, getWebsiteVisits } from "../utils/storage"
 
 import "../index.css"
 
@@ -35,31 +35,53 @@ function WebsiteCard({
 
 function StatsPage() {
   const [websiteStats, setWebsiteStats] = useState<WebsiteVisit[]>([])
+  const [hiddenSites, setHiddenSites] = useState<string[]>([])
+  const [showHiddenSites, setShowHiddenSites] = useState(false)
+  console.log("showHiddenSites", showHiddenSites)
 
-  const fetchWebsiteStats = () => {
-    getWebsiteVisits().then((visits) => {
-      const statsArray = Object.values(visits)
-      setWebsiteStats(statsArray.sort((a, b) => b.visitCount - a.visitCount))
-    })
+  const fetchWebsiteStats = async () => {
+    const [visits, hidden] = await Promise.all([
+      getWebsiteVisits(),
+      getHiddenSites()
+    ])
+    setWebsiteStats(
+      Object.values(visits).sort((a, b) => b.visitCount - a.visitCount)
+    )
+    setHiddenSites(hidden)
   }
 
   useEffect(() => {
-    fetchWebsiteStats() // 初始加载
-
-    // 添加焦点事件监听器
+    fetchWebsiteStats()
     window.addEventListener("focus", fetchWebsiteStats)
-
-    // 清理函数
     return () => {
       window.removeEventListener("focus", fetchWebsiteStats)
     }
   }, [])
 
+  const filteredWebsiteStats = showHiddenSites
+    ? websiteStats
+    : websiteStats.filter((visit) => {
+        const hostname = getHostname(visit.url)
+        console.log("hostname", hiddenSites, hostname)
+        return !hiddenSites.includes(hostname)
+      })
+
   return (
     <div className="flex flex-col p-4 w-full overflow-auto">
-      <h1 className="text-xl font-bold mb-4">今日浏览统计</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-xl font-bold">今日浏览统计</h1>
+        <label className="flex items-center cursor-pointer">
+          <span className="mr-2 text-sm">显示隐藏的网站</span>
+          <input
+            type="checkbox"
+            checked={showHiddenSites}
+            onChange={(e) => setShowHiddenSites(e.target.checked)}
+            className="form-checkbox h-5 w-5 text-blue-600"
+          />
+        </label>
+      </div>
       <div className="flex flex-wrap justify-start -mx-2">
-        {websiteStats.map((site, index) => (
+        {filteredWebsiteStats.map((site, index) => (
           <WebsiteCard key={index} {...site} />
         ))}
       </div>

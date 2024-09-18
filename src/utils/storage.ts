@@ -1,7 +1,8 @@
 import type { WebsiteVisit, WebsiteVisits } from "../types"
 
 export const StorageKeys = {
-  WEBSITE_VISITS: "websiteVisits"
+  WEBSITE_VISITS: "websiteVisits",
+  HIDDEN_SITES: "hiddenSites"
 } as const
 
 export async function getWebsiteVisits(): Promise<WebsiteVisits> {
@@ -45,4 +46,21 @@ export async function updateWebsiteVisit(
 
 export async function clearWebsiteVisits(): Promise<void> {
   await setWebsiteVisits({})
+}
+
+export async function getHiddenSites(): Promise<string[]> {
+  return new Promise((resolve) => {
+    chrome.storage.local.get([StorageKeys.HIDDEN_SITES], (result) => {
+      resolve((result[StorageKeys.HIDDEN_SITES] as string[]) || [])
+    })
+  })
+}
+
+export async function setHiddenSites(hiddenSites: string[]): Promise<void> {
+  return new Promise((resolve) => {
+    chrome.storage.local.set(
+      { [StorageKeys.HIDDEN_SITES]: hiddenSites },
+      resolve
+    )
+  })
 }
