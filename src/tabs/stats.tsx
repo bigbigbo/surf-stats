@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react"
 import { CSSTransition, TransitionGroup } from "react-transition-group"
 
 import type { WebsiteVisit } from "../types"
-import { formatTime, getHostname } from "../utils/helpers"
+import { formatTime, getMainDomain } from "../utils/helpers"
 import {
   getHiddenSites,
   getShowHiddenSites,
@@ -51,7 +51,7 @@ function StatsPage() {
       getShowHiddenSites()
     ])
     setWebsiteStats(
-      Object.values(visits).sort((a, b) => b.visitCount - a.visitCount)
+      Object.values(visits).sort((a, b) => b.timeSpent - a.timeSpent)
     )
     setHiddenSites(hidden)
     setShowHiddenSitesState(showHidden)
@@ -76,8 +76,8 @@ function StatsPage() {
   const filteredWebsiteStats = showHiddenSites
     ? websiteStats
     : websiteStats.filter((visit) => {
-        const hostname = getHostname(visit.url)
-        return !hiddenSites.includes(hostname)
+        const mainDomain = getMainDomain(visit.url)
+        return !hiddenSites.includes(mainDomain)
       })
 
   const handleOpenOptions = () => {

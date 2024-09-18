@@ -7,39 +7,21 @@ export const StorageKeys = {
 } as const
 
 export class WebsiteVisitsManager {
-  private websiteVisits: WebsiteVisits = {}
-
-  constructor() {
-    this.loadFromStorage()
-  }
-
-  async loadFromStorage(): Promise<void> {
-    this.websiteVisits = await new Promise((resolve) => {
+  async getWebsiteVisits(): Promise<WebsiteVisits> {
+    return new Promise((resolve) => {
       chrome.storage.local.get([StorageKeys.WEBSITE_VISITS], (result) => {
         resolve((result[StorageKeys.WEBSITE_VISITS] as WebsiteVisits) || {})
       })
     })
   }
 
-  async saveToStorage(): Promise<void> {
-    return new Promise((resolve) => {
-      chrome.storage.local.set(
-        { [StorageKeys.WEBSITE_VISITS]: this.websiteVisits },
-        resolve
-      )
-    })
-  }
-
-  getWebsiteVisits(): WebsiteVisits {
-    return this.websiteVisits
-  }
-
   async updateWebsiteVisit(
     hostname: string,
     update: Partial<WebsiteVisit>
   ): Promise<void> {
-    if (!this.websiteVisits[hostname]) {
-      this.websiteVisits[hostname] = {
+    const websiteVisits = await this.getWebsiteVisits()
+    if (!websiteVisits[hostname]) {
+      websiteVisits[hostname] = {
         url: hostname,
         title: "",
         favicon: "",
@@ -48,32 +30,37 @@ export class WebsiteVisitsManager {
         ...update
       }
     } else {
-      this.websiteVisits[hostname] = {
-        ...this.websiteVisits[hostname],
+      websiteVisits[hostname] = {
+        ...websiteVisits[hostname],
         ...update
       }
     }
-    await this.saveToStorage()
+    await this.saveToStorage(websiteVisits)
+  }
+
+  async saveToStorage(websiteVisits: WebsiteVisits): Promise<void> {
+    return new Promise((resolve) => {
+      chrome.storage.local.set(
+        { [StorageKeys.WEBSITE_VISITS]: websiteVisits },
+        resolve
+      )
+    })
   }
 
   async clearWebsiteVisits(): Promise<void> {
-    this.websiteVisits = {}
-    await this.saveToStorage()
+    await this.saveToStorage({})
   }
 }
 
 // 创建一个单例实例
 export const websiteVisitsManager = new WebsiteVisitsManager()
 
-// 为了保持与之前代码的兼容性，我们可以添加这个函数
 export async function getWebsiteVisits(): Promise<WebsiteVisits> {
   return websiteVisitsManager.getWebsiteVisits()
 }
 
-// 保留其他现有的函数，但修改 clearAllStats 函数
 export async function clearAllStats() {
   await websiteVisitsManager.clearWebsiteVisits()
-  chrome.runtime.sendMessage({ action: "clearWebsiteVisits" })
 }
 
 export async function getHiddenSites(): Promise<string[]> {

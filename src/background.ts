@@ -1,5 +1,6 @@
 import {
   getHostname,
+  getMainDomain,
   getNextMidnight,
   shouldTrackUrl,
   shouldUpdateVisitCount
@@ -15,8 +16,10 @@ async function updateWebsiteVisitInfo(
   title: string,
   favicon: string
 ) {
-  const currentVisit = websiteVisitsManager.getWebsiteVisits()[hostname]
-  await websiteVisitsManager.updateWebsiteVisit(hostname, {
+  const mainDomain = getMainDomain(hostname)
+  const websiteVisits = await websiteVisitsManager.getWebsiteVisits()
+  const currentVisit = websiteVisits[mainDomain]
+  await websiteVisitsManager.updateWebsiteVisit(mainDomain, {
     title,
     favicon: favicon || currentVisit?.favicon,
     visitCount: (currentVisit?.visitCount || 0) + 1
@@ -50,7 +53,7 @@ async function updateTimeSpent() {
     currentTabStartTime !== null &&
     currentTabUrl !== null
   ) {
-    const websiteVisits = websiteVisitsManager.getWebsiteVisits()
+    const websiteVisits = await websiteVisitsManager.getWebsiteVisits()
     if (websiteVisits[currentTabUrl]) {
       const timeSpent = Date.now() - currentTabStartTime
       await websiteVisitsManager.updateWebsiteVisit(currentTabUrl, {
@@ -61,33 +64,42 @@ async function updateTimeSpent() {
 }
 
 chrome.tabs.onActivated.addListener((activeInfo) => {
-  updateTimeSpent()
+  updateTimeSpent().then(() => {
+    currentTabId = activeInfo.tabId
+    currentTabStartTime = Date.now()
 
-  currentTabId = activeInfo.tabId
-  currentTabStartTime = Date.now()
-
-  chrome.tabs.get(currentTabId, (tab) => {
-    if (tab.url && shouldTrackUrl(tab.url)) {
-      currentTabUrl = getHostname(tab.url)
-      const websiteVisits = websiteVisitsManager.getWebsiteVisits()
-      if (!websiteVisits[currentTabUrl]) {
-        websiteVisitsManager.updateWebsiteVisit(currentTabUrl, {
-          title: tab.title || "",
-          favicon: tab.favIconUrl || ""
-        })
+    chrome.tabs.get(currentTabId, (tab) => {
+      if (chrome.runtime.lastError) {
+        console.error(chrome.runtime.lastError)
+        return
       }
-    } else {
-      currentTabUrl = null
-    }
+
+      if (tab.url && shouldTrackUrl(tab.url)) {
+        const hostname = getHostname(tab.url)
+        currentTabUrl = getMainDomain(hostname)
+        websiteVisitsManager.getWebsiteVisits().then((websiteVisits) => {
+          if (!websiteVisits[currentTabUrl]) {
+            websiteVisitsManager.updateWebsiteVisit(currentTabUrl, {
+              title: tab.title || "",
+              favicon: tab.favIconUrl || "",
+              visitCount: 1
+            })
+          }
+        })
+      } else {
+        currentTabUrl = null
+      }
+    })
   })
 })
 
 // 当浏览器关闭时，更新最后一个标签的时间
 chrome.windows.onRemoved.addListener(() => {
-  updateTimeSpent()
-  currentTabId = null
-  currentTabStartTime = null
-  currentTabUrl = null
+  updateTimeSpent().then(() => {
+    currentTabId = null
+    currentTabStartTime = null
+    currentTabUrl = null
+  })
 })
 
 // 每天凌晨重置统计数据
