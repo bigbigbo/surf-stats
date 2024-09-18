@@ -37,3 +37,13 @@ export function formatTime(timeInMs: number): string {
     .toString()
     .padStart(2, "0")}`
 }
+
+export function getNextMidnight(): number {
+  const now = new Date()
+  const nextMidnight = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1
+  )
+  return nextMidnight.getTime()
+}

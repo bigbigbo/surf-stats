@@ -1,5 +1,6 @@
 import {
   getHostname,
+  getNextMidnight,
   shouldTrackUrl,
   shouldUpdateVisitCount
 } from "./utils/helpers"
@@ -90,7 +91,11 @@ chrome.windows.onRemoved.addListener(() => {
 })
 
 // 每天凌晨重置统计数据
-chrome.alarms.create("resetStats", { periodInMinutes: 1440 })
+chrome.alarms.create("resetStats", {
+  when: getNextMidnight(),
+  periodInMinutes: 24 * 60 // 24小时
+})
+
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === "resetStats") {
     websiteVisitsManager.clearWebsiteVisits()
