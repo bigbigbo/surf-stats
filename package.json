@@ -31,7 +31,10 @@
       "https://*/*"
     ],
     "permissions": [
-      "tabs"
+      "tabs",
+      "storage",
+      "alarms",
+      "windows"
     ]
   }
 }
