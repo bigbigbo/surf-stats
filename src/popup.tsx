@@ -1,15 +1,15 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 
-import type { WebsiteVisit } from "./types"
-import { formatTime, getHostname } from "./utils/helpers"
+import type { WebsiteVisit } from "./types";
+import { formatTime, getHostname } from "./utils/helpers";
 import {
   getHiddenSites,
   getShowHiddenSites,
   getWebsiteVisits,
   setShowHiddenSites
-} from "./utils/storage"
+} from "./utils/storage";
 
-import "./index.css"
+import "./index.css";
 
 function WebsiteCard({ favicon, title, url, timeSpent }: WebsiteVisit) {
   return (
@@ -26,50 +26,50 @@ function WebsiteCard({ favicon, title, url, timeSpent }: WebsiteVisit) {
       </div>
       <p className="text-xs flex-shrink-0">{formatTime(timeSpent)}</p>
     </div>
-  )
+  );
 }
 
 function IndexPopup() {
-  const [topWebsites, setTopWebsites] = useState<WebsiteVisit[]>([])
-  const [hiddenSites, setHiddenSites] = useState<string[]>([])
-  const [showHiddenSites, setShowHiddenSitesState] = useState(false)
+  const [topWebsites, setTopWebsites] = useState<WebsiteVisit[]>([]);
+  const [hiddenSites, setHiddenSites] = useState<string[]>([]);
+  const [showHiddenSites, setShowHiddenSitesState] = useState(false);
 
   const fetchData = async () => {
     const [visits, hidden, showHidden] = await Promise.all([
       getWebsiteVisits(),
       getHiddenSites(),
       getShowHiddenSites()
-    ])
-    setHiddenSites(hidden)
-    setShowHiddenSitesState(showHidden)
-    const statsArray = Object.values(visits)
+    ]);
+    setHiddenSites(hidden);
+    setShowHiddenSitesState(showHidden);
+    const statsArray = Object.values(visits);
     const filteredStats = showHidden
       ? statsArray
-      : statsArray.filter((visit) => !hidden.includes(getHostname(visit.url)))
+      : statsArray.filter((visit) => !hidden.includes(getHostname(visit.url)));
     setTopWebsites(
       filteredStats.sort((a, b) => b.timeSpent - a.timeSpent).slice(0, 5)
-    )
-  }
+    );
+  };
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
 
   const handleShowHiddenSitesChange = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const newValue = e.target.checked
-    await setShowHiddenSites(newValue)
-    fetchData() // 重新获取数据
-  }
+    const newValue = e.target.checked;
+    await setShowHiddenSites(newValue);
+    fetchData(); // 重新获取数据
+  };
 
   const openStatsPage = () => {
-    chrome.tabs.create({ url: chrome.runtime.getURL("tabs/stats.html") })
-  }
+    chrome.tabs.create({ url: chrome.runtime.getURL("tabs/stats.html") });
+  };
 
   const openOptionsPage = () => {
-    chrome.runtime.openOptionsPage()
-  }
+    chrome.runtime.openOptionsPage();
+  };
 
   return (
     <div className="flex flex-col p-4 w-[300px] h-[360px]">
@@ -103,7 +103,7 @@ function IndexPopup() {
         </button>
       </div>
     </div>
-  )
+  );
 }
 
-export default IndexPopup
+export default IndexPopup;

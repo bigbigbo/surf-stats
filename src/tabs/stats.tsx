@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from "react"
-import { CSSTransition, TransitionGroup } from "react-transition-group"
+import React, { useEffect, useState } from "react";
+import { CSSTransition, TransitionGroup } from "react-transition-group";
 
-import type { WebsiteVisit } from "../types"
-import { formatTime, getMainDomain } from "../utils/helpers"
+import type { WebsiteVisit } from "../types";
+import { formatTime, getMainDomain } from "../utils/helpers";
 import {
   getHiddenSites,
   getShowHiddenSites,
   getWebsiteVisits,
   setShowHiddenSites
-} from "../utils/storage"
+} from "../utils/storage";
 
-import "../index.css"
+import "../index.css";
 
 function WebsiteCard({
   favicon,
@@ -36,53 +36,53 @@ function WebsiteCard({
         时长：{formatTime(timeSpent)}
       </p>
     </div>
-  )
+  );
 }
 
 function StatsPage() {
-  const [websiteStats, setWebsiteStats] = useState<WebsiteVisit[]>([])
-  const [hiddenSites, setHiddenSites] = useState<string[]>([])
-  const [showHiddenSites, setShowHiddenSitesState] = useState(false)
+  const [websiteStats, setWebsiteStats] = useState<WebsiteVisit[]>([]);
+  const [hiddenSites, setHiddenSites] = useState<string[]>([]);
+  const [showHiddenSites, setShowHiddenSitesState] = useState(false);
 
   const fetchWebsiteStats = async () => {
     const [visits, hidden, showHidden] = await Promise.all([
       getWebsiteVisits(),
       getHiddenSites(),
       getShowHiddenSites()
-    ])
+    ]);
     setWebsiteStats(
       Object.values(visits).sort((a, b) => b.timeSpent - a.timeSpent)
-    )
-    setHiddenSites(hidden)
-    setShowHiddenSitesState(showHidden)
-  }
+    );
+    setHiddenSites(hidden);
+    setShowHiddenSitesState(showHidden);
+  };
 
   useEffect(() => {
-    fetchWebsiteStats()
-    window.addEventListener("focus", fetchWebsiteStats)
+    fetchWebsiteStats();
+    window.addEventListener("focus", fetchWebsiteStats);
     return () => {
-      window.removeEventListener("focus", fetchWebsiteStats)
-    }
-  }, [])
+      window.removeEventListener("focus", fetchWebsiteStats);
+    };
+  }, []);
 
   const handleShowHiddenSitesChange = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const newValue = e.target.checked
-    await setShowHiddenSites(newValue)
-    fetchWebsiteStats() // 重新获取数据
-  }
+    const newValue = e.target.checked;
+    await setShowHiddenSites(newValue);
+    fetchWebsiteStats(); // 重新获取数据
+  };
 
   const filteredWebsiteStats = showHiddenSites
     ? websiteStats
     : websiteStats.filter((visit) => {
-        const mainDomain = getMainDomain(visit.url)
-        return !hiddenSites.includes(mainDomain)
-      })
+        const mainDomain = getMainDomain(visit.url);
+        return !hiddenSites.includes(mainDomain);
+      });
 
   const handleOpenOptions = () => {
-    chrome.runtime.openOptionsPage()
-  }
+    chrome.runtime.openOptionsPage();
+  };
 
   return (
     <div className="flex flex-col p-4 w-full overflow-auto">
@@ -113,7 +113,7 @@ function StatsPage() {
         ))}
       </TransitionGroup>
     </div>
-  )
+  );
 }
 
-export default StatsPage
+export default StatsPage;

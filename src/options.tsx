@@ -1,67 +1,67 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 
-import { clearAllStats, getHiddenSites, setHiddenSites } from "./utils/storage"
+import { clearAllStats, getHiddenSites, setHiddenSites } from "./utils/storage";
 
-import "./index.css"
+import "./index.css";
 
 function IndexOptions() {
-  const [hiddenSites, setHiddenSitesState] = useState<string[]>([])
-  const [newSite, setNewSite] = useState("")
-  const [editingSite, setEditingSite] = useState<string | null>(null)
-  const [editedSite, setEditedSite] = useState("")
+  const [hiddenSites, setHiddenSitesState] = useState<string[]>([]);
+  const [newSite, setNewSite] = useState("");
+  const [editingSite, setEditingSite] = useState<string | null>(null);
+  const [editedSite, setEditedSite] = useState("");
 
   useEffect(() => {
-    getHiddenSites().then(setHiddenSitesState)
-  }, [])
+    getHiddenSites().then(setHiddenSitesState);
+  }, []);
 
   const handleAddSite = async () => {
     if (newSite && !hiddenSites.includes(newSite)) {
-      const updatedSites = [...hiddenSites, newSite]
-      setHiddenSitesState(updatedSites)
-      await setHiddenSites(updatedSites) // 确保异步操作完成
-      setNewSite("")
+      const updatedSites = [...hiddenSites, newSite];
+      setHiddenSitesState(updatedSites);
+      await setHiddenSites(updatedSites); // 确保异步操作完成
+      setNewSite("");
     }
-  }
+  };
 
   const handleRemoveSite = async (site: string) => {
-    const updatedSites = hiddenSites.filter((s) => s !== site)
-    setHiddenSitesState(updatedSites)
-    await setHiddenSites(updatedSites) // 确保异步操作完成
-  }
+    const updatedSites = hiddenSites.filter((s) => s !== site);
+    setHiddenSitesState(updatedSites);
+    await setHiddenSites(updatedSites); // 确保异步操作完成
+  };
 
   const handleEditSite = (site: string) => {
-    setEditingSite(site)
-    setEditedSite(site)
-  }
+    setEditingSite(site);
+    setEditedSite(site);
+  };
 
   const handleSaveEdit = async () => {
     if (editingSite && editedSite && !hiddenSites.includes(editedSite)) {
       const updatedSites = hiddenSites.map((site) =>
         site === editingSite ? editedSite : site
-      )
-      setHiddenSitesState(updatedSites)
-      await setHiddenSites(updatedSites) // 确保异步操作完成
-      setEditingSite(null)
+      );
+      setHiddenSitesState(updatedSites);
+      await setHiddenSites(updatedSites); // 确保异步操作完成
+      setEditingSite(null);
     }
-  }
+  };
 
   const handleCancelEdit = () => {
-    setEditingSite(null)
-    setEditedSite("")
-  }
+    setEditingSite(null);
+    setEditedSite("");
+  };
 
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const handleClearStats = () => {
-    setShowConfirmDialog(true)
-  }
+    setShowConfirmDialog(true);
+  };
 
   const confirmClearStats = async () => {
-    await clearAllStats()
-    setShowConfirmDialog(false)
+    await clearAllStats();
+    setShowConfirmDialog(false);
     // 可以在这里添加一个提示，告诉用户数据已被清除
-    alert("所有统计信息已被删除")
-  }
+    alert("所有统计信息已被删除");
+  };
 
   return (
     <div className="flex justify-center min-h-screen ">
@@ -172,7 +172,7 @@ function IndexOptions() {
         )}
       </div>
     </div>
-  )
+  );
 }
 
-export default IndexOptions
+export default IndexOptions;
