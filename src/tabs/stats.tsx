@@ -45,8 +45,13 @@ function StatsPage() {
   const [showHiddenSites, setShowHiddenSitesState] = useState(false);
 
   const fetchWebsiteStats = async () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
     const [visits, hidden, showHidden] = await Promise.all([
-      getWebsiteVisits(),
+      getWebsiteVisits(today, tomorrow),
       getHiddenSites(),
       getShowHiddenSites()
     ]);
