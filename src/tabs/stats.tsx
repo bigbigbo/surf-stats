@@ -22,7 +22,7 @@ function WebsiteCard({
   return (
     <div className="bg-white rounded-lg shadow-md p-4 mb-4 flex flex-col items-center w-[calc(33.33%-1rem)] mx-2">
       <img src={favicon} alt={`${title} logo`} className="w-12 h-12 mb-2" />
-      <h2 className="text-base font-semibold text-center line-clamp-2 h-12 overflow-hidden">
+      <h2 className="text-base font-semibold text-center line-clamp-2 h-12 overflow-hidden text-ellipsis break-all">
         {title}
       </h2>
       <a
