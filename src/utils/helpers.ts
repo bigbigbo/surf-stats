@@ -19,7 +19,8 @@ export function shouldTrackUrl(url: string): boolean {
 }
 
 // 获取主域名
-export function getMainDomain(hostname: string): string {
+export function getMainDomain(hostname: string | null): string {
+  if (!hostname) return "";
   const parts = hostname.split(".");
   if (parts.length > 2) {
     // 处理类似 .co.uk 的特殊顶级域名
@@ -34,8 +35,8 @@ export function getMainDomain(hostname: string): string {
 // 修改 getHostname 函数
 export function getHostname(url: string): string {
   try {
-    const hostname = new URL(url).hostname;
-    return getMainDomain(hostname);
+    const urlObject = new URL(url);
+    return getMainDomain(urlObject.hostname);
   } catch {
     return url;
   }
