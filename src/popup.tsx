@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 
-import type { WebsiteVisit } from "./types";
-import { formatTime, getHostname } from "./utils/helpers";
 import {
   getHiddenSites,
   getShowHiddenSites,
   getWebsiteVisits,
   setShowHiddenSites
-} from "./utils/storage";
+} from "./store/storage";
+import type { WebsiteVisit } from "./types";
+import { formatTime } from "./utils/date";
+import { getHostname } from "./utils/url";
 
 import "./index.css";
 

@@ -1,8 +1,8 @@
 import type { BrowsingRecord, WebsiteVisits } from "../types";
-import { getHostname } from "./helpers";
+import { getHostname } from "../utils/url";
 
 const DB_NAME = "BrowsingHistoryDB";
-const DB_VERSION = 6; // 增加版本号以触发数据库升级
+const DB_VERSION = 6;
 const BROWSING_RECORDS_STORE_NAME = "browsingRecords";
 
 let db: IDBDatabase | null = null;

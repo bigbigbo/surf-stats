@@ -1,9 +1,5 @@
-import {
-  getHostname,
-  shouldTrackUrl,
-  shouldUpdateVisitCount
-} from "./utils/helpers";
-import { websiteVisitsManager } from "./utils/storage";
+import { websiteVisitsManager } from "./store/storage";
+import { getHostname, shouldTrackUrl } from "./utils/url";
 
 // 添加一个变量来存储最后一次更新的时间戳和当前活跃的标签
 let lastUpdateTimestamp: { [tabId: number]: number } = {};
@@ -92,10 +88,8 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   ) {
     const hostname = getHostname(tab.url);
     debounce(tabId, () => {
-      if (shouldUpdateVisitCount(lastUpdateTimestamp, tabId)) {
-        lastUpdateTimestamp[tabId] = Date.now();
-        addOrUpdateBrowsingRecord(hostname, tab.title, tab.favIconUrl || "", 0);
-      }
+      lastUpdateTimestamp[tabId] = Date.now();
+      addOrUpdateBrowsingRecord(hostname, tab.title, tab.favIconUrl || "", 0);
     });
   }
 });

@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
 
-import type { WebsiteVisit } from "../types";
-import { formatTime, getMainDomain } from "../utils/helpers";
 import {
   getHiddenSites,
   getShowHiddenSites,
   getWebsiteVisits,
   setShowHiddenSites
-} from "../utils/storage";
+} from "../store/storage";
+import type { WebsiteVisit } from "../types";
+import { formatTime } from "../utils/date";
+import { getHostname } from "../utils/url";
 
 import "../index.css";
 
@@ -81,7 +82,7 @@ function StatsPage() {
   const filteredWebsiteStats = showHiddenSites
     ? websiteStats
     : websiteStats.filter((visit) => {
-        const mainDomain = getMainDomain(visit.url);
+        const mainDomain = getHostname(visit.url);
         return !hiddenSites.includes(mainDomain);
       });
 

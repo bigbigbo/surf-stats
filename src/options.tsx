@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { clearAllStats, getHiddenSites, setHiddenSites } from "./utils/storage";
+import { clearAllStats, getHiddenSites, setHiddenSites } from "./store/storage";
 
 import "./index.css";
 
