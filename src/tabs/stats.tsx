@@ -25,6 +25,7 @@ function StatsPage() {
   const [websiteStats, setWebsiteStats] = useState<WebsiteVisit[]>([]);
   const [hiddenSites, setHiddenSites] = useState<string[]>([]);
   const [showHiddenSites, setShowHiddenSitesState] = useState(false);
+  const [totalTimeSpent, setTotalTimeSpent] = useState(0);
 
   const fetchWebsiteStats = async () => {
     const today = new Date();
@@ -37,11 +38,15 @@ function StatsPage() {
       getHiddenSites(),
       getShowHiddenSites()
     ]);
-    setWebsiteStats(
-      Object.values(visits).sort((a, b) => b.timeSpent - a.timeSpent)
+    const sortedVisits = Object.values(visits).sort(
+      (a, b) => b.timeSpent - a.timeSpent
     );
+    setWebsiteStats(sortedVisits);
     setHiddenSites(hidden);
     setShowHiddenSitesState(showHidden);
+    setTotalTimeSpent(
+      sortedVisits.reduce((total, visit) => total + visit.timeSpent, 0)
+    );
   };
 
   useEffect(() => {
@@ -74,7 +79,9 @@ function StatsPage() {
   return (
     <div className="flex flex-col p-4 w-full overflow-auto">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold">今日浏览统计</h1>
+        <h1 className="text-xl font-bold">
+          今日浏览时长总计: {formatTime(totalTimeSpent)}
+        </h1>
         <div className="flex items-center">
           <label className="flex items-center cursor-pointer mr-4">
             <span className="mr-2 text-sm">显示隐藏的网站</span>
@@ -115,7 +122,10 @@ function StatsPage() {
                 {site.title}
               </TableCell>
               <TableCell>
-                <a href={site.url} className="text-blue-500 hover:underline">
+                <a
+                  href={`https://${site.url}`}
+                  target="_blank"
+                  className="text-blue-500 hover:underline">
                   {site.url}
                 </a>
               </TableCell>
