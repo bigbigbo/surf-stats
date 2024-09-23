@@ -1,13 +1,20 @@
+import { Button } from "@/components/button";
+import { Calendar } from "@/components/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/popover";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow
 } from "@/components/table";
+import { cn } from "@/utils/class";
+import { format } from "date-fns";
+import { zhCN } from "date-fns/locale";
+import { Calendar as CalendarIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import type { DateRange } from "react-day-picker";
 
 import {
   getHiddenSites,
@@ -26,15 +33,14 @@ function StatsPage() {
   const [hiddenSites, setHiddenSites] = useState<string[]>([]);
   const [showHiddenSites, setShowHiddenSitesState] = useState(false);
   const [totalTimeSpent, setTotalTimeSpent] = useState(0);
+  const [date, setDate] = React.useState<DateRange | undefined>({
+    from: new Date(),
+    to: new Date()
+  });
 
-  const fetchWebsiteStats = async () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
+  const fetchWebsiteStats = async (from: Date, to: Date) => {
     const [visits, hidden, showHidden] = await Promise.all([
-      getWebsiteVisits(today, tomorrow),
+      getWebsiteVisits(from, to),
       getHiddenSites(),
       getShowHiddenSites()
     ]);
@@ -50,19 +56,26 @@ function StatsPage() {
   };
 
   useEffect(() => {
-    fetchWebsiteStats();
-    window.addEventListener("focus", fetchWebsiteStats);
+    fetchWebsiteStats(date.from, date.to);
+    window.addEventListener("focus", () =>
+      fetchWebsiteStats(date.from, date.to)
+    );
+
     return () => {
-      window.removeEventListener("focus", fetchWebsiteStats);
+      window.removeEventListener("focus", () =>
+        fetchWebsiteStats(date.from, date.to)
+      );
     };
-  }, []);
+  }, [date]);
 
   const handleShowHiddenSitesChange = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const newValue = e.target.checked;
     await setShowHiddenSites(newValue);
-    fetchWebsiteStats();
+    if (date?.from && date?.to) {
+      fetchWebsiteStats(date.from, date.to);
+    }
   };
 
   const filteredWebsiteStats = showHiddenSites
@@ -76,12 +89,28 @@ function StatsPage() {
     chrome.runtime.openOptionsPage();
   };
 
+  const handleRefresh = () => {
+    if (date?.from && date?.to) {
+      fetchWebsiteStats(date.from, date.to);
+    }
+  };
+
+  const handleDateSelect = (selectedDate: DateRange | undefined) => {
+    setDate(selectedDate);
+    if (selectedDate?.from && selectedDate?.to) {
+      const endDate = new Date(selectedDate.to);
+      endDate.setDate(endDate.getDate() + 1); // 包含结束日期
+      fetchWebsiteStats(selectedDate.from, endDate);
+    }
+  };
+
   return (
     <div className="flex flex-col p-4 w-full overflow-auto">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-xl font-bold">
-          今日浏览时长总计: {formatTime(totalTimeSpent)}
+          浏览时长总计: {formatTime(totalTimeSpent)}
         </h1>
+
         <div className="flex items-center">
           <label className="flex items-center cursor-pointer mr-4">
             <span className="mr-2 text-sm">显示隐藏的网站</span>
@@ -92,12 +121,52 @@ function StatsPage() {
               className="form-checkbox h-5 w-5 text-blue-600"
             />
           </label>
-          <button
-            onClick={handleOpenOptions}
-            className="text-blue-600 hover:text-blue-800 text-sm">
+          <Button variant="link" onClick={handleOpenOptions}>
             设置
-          </button>
+          </Button>
         </div>
+      </div>
+      <div className="flex items-center mb-2">
+        <Button className="mr-2" variant="outline" onClick={handleRefresh}>
+          刷新
+        </Button>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              id="date"
+              variant={"outline"}
+              className={cn(
+                "w-[300px] justify-start text-left font-normal",
+                !date && "text-muted-foreground"
+              )}>
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {date?.from ? (
+                date.to ? (
+                  <>
+                    {format(date.from, "LLL dd, y", { locale: zhCN })} -{" "}
+                    {format(date.to, "LLL dd, y", { locale: zhCN })}
+                  </>
+                ) : (
+                  format(date.from, "LLL dd, y", { locale: zhCN })
+                )
+              ) : (
+                <span>选择日期</span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              locale={zhCN}
+              initialFocus
+              mode="range"
+              defaultMonth={date?.from}
+              selected={date}
+              onSelect={handleDateSelect}
+              numberOfMonths={2}
+            />
+          </PopoverContent>
+        </Popover>
       </div>
       <Table>
         <TableHeader>
