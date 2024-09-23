@@ -1,5 +1,13 @@
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/table";
 import React, { useEffect, useState } from "react";
-import { CSSTransition, TransitionGroup } from "react-transition-group";
 
 import {
   getHiddenSites,
@@ -12,33 +20,6 @@ import { formatTime } from "../utils/date";
 import { getHostname } from "../utils/url";
 
 import "../index.css";
-
-function WebsiteCard({
-  favicon,
-  title,
-  url,
-  visitCount,
-  timeSpent
-}: WebsiteVisit) {
-  return (
-    <div className="bg-white rounded-lg shadow-md p-4 mb-4 flex flex-col items-center w-[calc(33.33%-1rem)] mx-2">
-      <img src={favicon} alt={`${title} logo`} className="w-12 h-12 mb-2" />
-      <h2 className="text-base font-semibold text-center line-clamp-2 h-12 overflow-hidden text-ellipsis break-all">
-        {title}
-      </h2>
-      <a
-        href={url}
-        className="text-xs text-blue-500 hover:underline text-center truncate w-full">
-        {url}
-      </a>
-      <p className="text-xs mt-2 text-center">
-        访问：{visitCount}次
-        <br />
-        时长：{formatTime(timeSpent)}
-      </p>
-    </div>
-  );
-}
 
 function StatsPage() {
   const [websiteStats, setWebsiteStats] = useState<WebsiteVisit[]>([]);
@@ -76,7 +57,7 @@ function StatsPage() {
   ) => {
     const newValue = e.target.checked;
     await setShowHiddenSites(newValue);
-    fetchWebsiteStats(); // 重新获取数据
+    fetchWebsiteStats();
   };
 
   const filteredWebsiteStats = showHiddenSites
@@ -111,13 +92,39 @@ function StatsPage() {
           </button>
         </div>
       </div>
-      <TransitionGroup className="flex flex-wrap justify-start -mx-2">
-        {filteredWebsiteStats.map((site) => (
-          <CSSTransition key={site.url} timeout={300} classNames="item">
-            <WebsiteCard {...site} />
-          </CSSTransition>
-        ))}
-      </TransitionGroup>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-16">序号</TableHead>
+            <TableHead>网站</TableHead>
+            <TableHead>URL</TableHead>
+            <TableHead>访问次数</TableHead>
+            <TableHead>访问时长</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredWebsiteStats.map((site, index) => (
+            <TableRow key={site.url}>
+              <TableCell className="text-center">{index + 1}</TableCell>
+              <TableCell className="flex items-center">
+                <img
+                  src={site.favicon}
+                  alt={`${site.title} logo`}
+                  className="w-6 h-6 mr-2"
+                />
+                {site.title}
+              </TableCell>
+              <TableCell>
+                <a href={site.url} className="text-blue-500 hover:underline">
+                  {site.url}
+                </a>
+              </TableCell>
+              <TableCell>{site.visitCount}次</TableCell>
+              <TableCell>{formatTime(site.timeSpent)}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }
