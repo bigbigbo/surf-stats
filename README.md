@@ -1,5 +1,5 @@
 # Surf Stats 浏览统计插件
-> Prower by [Cursor](https://www.cursor.com/)
+> Powered by [Cursor](https://www.cursor.com/)
 
 Surf Stats 是一个Chrome浏览器扩展，用于记录和统计您每天的网页浏览情况。
 
